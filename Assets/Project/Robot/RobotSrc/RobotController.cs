@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using VacuumSorter.Feedback;
 using VacuumSorter.PlayerInput;
 using UnityEngine;
 
@@ -15,7 +16,9 @@ namespace VacuumSorter.Robot
 
         private readonly ContactPoint[] _contactBuffer = new ContactPoint[8];
         private readonly Collider[] _ejectOverlapBuffer = new Collider[48];
+        private readonly Collider[] _denseOverlapBuffer = new Collider[48];
         private readonly HashSet<Rigidbody> _ejectRigidbodies = new();
+        private readonly HashSet<Rigidbody> _denseRigidbodies = new();
         private readonly List<Collider> _scoopColliders = new();
 
         private Rigidbody _rigidbody;
@@ -133,6 +136,7 @@ namespace VacuumSorter.Robot
         {
             if (collision.rigidbody != null)
             {
+                TryTriggerDensePileFeedback(collision);
                 return;
             }
 
@@ -418,5 +422,57 @@ namespace VacuumSorter.Robot
             _nextScoopWallCollisionRetryTime = Time.time + 0.5f;
         }
 
+        private void TryTriggerDensePileFeedback(Collision collision)
+        {
+            if (collision == null || _rigidbody == null)
+            {
+                return;
+            }
+
+            var contactCount = collision.contactCount;
+            if (contactCount <= 0)
+            {
+                return;
+            }
+
+            var scoopProbeCenter = transform.TransformPoint(new Vector3(0f, 0.25f, 0.9f));
+            var overlapCount = Physics.OverlapSphereNonAlloc(
+                scoopProbeCenter,
+                1.1f,
+                _denseOverlapBuffer,
+                ~0,
+                QueryTriggerInteraction.Ignore);
+
+            _denseRigidbodies.Clear();
+            for (var i = 0; i < overlapCount; i++)
+            {
+                var hit = _denseOverlapBuffer[i];
+                if (hit == null)
+                {
+                    continue;
+                }
+
+                var hitBody = hit.attachedRigidbody;
+                if (hitBody == null || hitBody == _rigidbody || hitBody.isKinematic)
+                {
+                    continue;
+                }
+
+                _denseRigidbodies.Add(hitBody);
+            }
+
+            if (_denseRigidbodies.Count <= 0)
+            {
+                return;
+            }
+
+            var planarVelocity = _rigidbody.linearVelocity;
+            planarVelocity.y = 0f;
+
+            FeedbackRuntimeBootstrap.Current?.TryPlayDensePush(
+                collision.GetContact(0).point,
+                planarVelocity.magnitude,
+                _denseRigidbodies.Count);
+        }
     }
 }

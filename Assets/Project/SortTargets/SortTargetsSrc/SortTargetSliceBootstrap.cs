@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using VacuumSorter.Bootstrap;
+using VacuumSorter.Feedback;
 using VacuumSorter.Items;
 using VacuumSorter.LevelFlow;
 using VacuumSorter.Scoring;
@@ -260,9 +261,15 @@ namespace VacuumSorter.SortTargets
             return new Vector3(Mathf.Cos(angle) * 5.2f, 0f, Mathf.Sin(angle) * 5.2f);
         }
 
-        private void OnItemAccepted(ItemTypeConfig acceptedType)
+        private bool OnItemAccepted(ItemTypeConfig acceptedType, Vector3 acceptedWorldPosition)
         {
-            _completionService?.TryRegisterSorted(acceptedType);
+            var counted = _completionService != null && _completionService.TryRegisterSorted(acceptedType);
+            if (counted)
+            {
+                FeedbackRuntimeBootstrap.Current?.PlaySortSuccess(acceptedType, acceptedWorldPosition);
+            }
+
+            return counted;
         }
     }
 }

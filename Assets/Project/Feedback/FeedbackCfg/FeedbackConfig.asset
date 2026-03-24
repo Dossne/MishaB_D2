@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff6689331a754fda96ad97ab49291ba2, type: 3}
+  m_Name: FeedbackConfig
+  m_EditorClassIdentifier: 
+  _floatingText:
+    _lifetime: 0.85
+    _riseDistance: 110
+    _startScale: 1
+    _endScale: 0.82
+    _fontSize: 66
+  _sortSuccess:
+    _enabled: 1
+    _floatingText: +1
+    _useItemColorForText: 0
+    _textColor: {r: 1, g: 1, b: 1, a: 1}
+    _worldOffset: {x: 0, y: 0.42, z: 0}
+    _glowColor: {r: 0.58, g: 1, b: 0.64, a: 0.9}
+    _glowDuration: 0.22
+    _glowStartScale: 0.35
+    _glowEndScale: 1.1
+    _triggerHaptic: 1
+  _densePush:
+    _enabled: 1
+    _cooldown: 0.2
+    _minRobotSpeed: 1.35
+    _minNearbyDynamicBodies: 4
+    _glowColor: {r: 1, g: 0.79, b: 0.42, a: 0.55}
+    _glowDuration: 0.12
+    _glowStartScale: 0.4
+    _glowEndScale: 0.95
+    _triggerHaptic: 0
+  _audio:
+    _enableAudioHooks: 1
+    _logMissingAudioClips: 1
+    _sortSuccessClip: {fileID: 0}
+    _sortSuccessVolume: 0.75
+    _sortSuccessPitch: 1
+    _densePushClip: {fileID: 0}
+    _densePushVolume: 0.32
+    _densePushPitch: 1
+  _haptic:
+    _enabled: 1
+    _vibrateOnSortSuccess: 1
+    _vibrateOnDensePush: 0
+    _vibrateCooldown: 0.12
+    _logInEditor: 1
+

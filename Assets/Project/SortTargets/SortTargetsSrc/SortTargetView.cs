@@ -20,14 +20,14 @@ namespace VacuumSorter.SortTargets
         private float _pullDuration;
         private float _sinkDepth;
         private float _wrongRejectImpulse;
-        private Action<ItemTypeConfig> _onAccepted;
+        private Func<ItemTypeConfig, Vector3, bool> _onAccepted;
         private MaterialPropertyBlock _propertyBlock;
         private Transform _sinkPoint;
 
         public void Initialize(
             ItemTypeConfig acceptedType,
             LevelConfig.TargetInteractionSettings interactionSettings,
-            Action<ItemTypeConfig> onAccepted)
+            Func<ItemTypeConfig, Vector3, bool> onAccepted)
         {
             _acceptedType = acceptedType;
             _pullDuration = interactionSettings != null ? interactionSettings.PullDuration : 0.24f;
@@ -144,6 +144,8 @@ namespace VacuumSorter.SortTargets
             var itemTransform = itemView.transform;
             var startPosition = itemTransform.position;
             var startScale = itemTransform.localScale;
+            var startRotation = itemTransform.rotation;
+            var targetRotation = Quaternion.AngleAxis(220f, Vector3.up) * startRotation;
             var targetPosition = _sinkPoint != null ? _sinkPoint.position : transform.position + Vector3.down * _sinkDepth;
 
             var body = itemView.GetComponent<Rigidbody>();
@@ -166,12 +168,14 @@ namespace VacuumSorter.SortTargets
             {
                 elapsed += Time.deltaTime;
                 var t = Mathf.Clamp01(elapsed / _pullDuration);
-                itemTransform.position = Vector3.Lerp(startPosition, targetPosition, t);
-                itemTransform.localScale = Vector3.Lerp(startScale, startScale * 0.2f, t);
+                var eased = 1f - Mathf.Pow(1f - t, 2.35f);
+                itemTransform.position = Vector3.Lerp(startPosition, targetPosition, eased);
+                itemTransform.localScale = Vector3.Lerp(startScale, startScale * 0.08f, eased);
+                itemTransform.rotation = Quaternion.Slerp(startRotation, targetRotation, eased);
                 yield return null;
             }
 
-            _onAccepted?.Invoke(_acceptedType);
+            _onAccepted?.Invoke(_acceptedType, targetPosition);
             Destroy(itemView.gameObject);
         }
 
