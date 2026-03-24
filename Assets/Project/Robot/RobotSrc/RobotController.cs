@@ -206,7 +206,7 @@ namespace VacuumSorter.Robot
 
         private void EnsureRobotVisuals()
         {
-            var body = EnsureVisualCube("RobotBody", transform, new Vector3(0f, VisualY, -0.05f), new Vector3(1.3f, 0.46f, 1.45f), new Color(0.72f, 0.79f, 0.86f, 1f));
+            var body = EnsureVisualPrimitive("RobotBody", PrimitiveType.Cylinder, transform, new Vector3(0f, 0.24f, -0.05f), new Vector3(1.3f, 0.22f, 1.45f), new Color(0.72f, 0.79f, 0.86f, 1f));
             var top = EnsureVisualCube("RobotTop", transform, new Vector3(0f, 0.5f, -0.08f), new Vector3(0.8f, 0.18f, 0.8f), new Color(0.18f, 0.22f, 0.27f, 1f));
             EnsureVisualCube("ScoopLeft", transform, new Vector3(-0.58f, 0.22f, 0.8f), new Vector3(0.22f, 0.3f, 1.35f), new Color(0.97f, 0.78f, 0.32f, 1f));
             EnsureVisualCube("ScoopRight", transform, new Vector3(0.58f, 0.22f, 0.8f), new Vector3(0.22f, 0.3f, 1.35f), new Color(0.97f, 0.78f, 0.32f, 1f));
@@ -223,6 +223,49 @@ namespace VacuumSorter.Robot
             EnsureScoopCollider("ScoopColliderRight", new Vector3(0.58f, 0.22f, 0.8f), new Vector3(0.22f, 0.3f, 1.35f));
         }
 
+        private static GameObject EnsureVisualPrimitive(
+            string name,
+            PrimitiveType primitiveType,
+            Transform parent,
+            Vector3 localPosition,
+            Vector3 localScale,
+            Color color)
+        {
+            var existing = parent.Find(name);
+            GameObject visual;
+
+            if (existing == null)
+            {
+                visual = GameObject.CreatePrimitive(primitiveType);
+                visual.name = name;
+                visual.transform.SetParent(parent, false);
+            }
+            else
+            {
+                visual = existing.gameObject;
+            }
+
+            visual.transform.localPosition = localPosition;
+            visual.transform.localRotation = Quaternion.identity;
+            visual.transform.localScale = localScale;
+
+            var collider = visual.GetComponent<Collider>();
+            if (collider != null)
+            {
+                Destroy(collider);
+            }
+
+            var renderer = visual.GetComponent<MeshRenderer>();
+            if (renderer != null)
+            {
+                var propertyBlock = new MaterialPropertyBlock();
+                propertyBlock.SetColor("_BaseColor", color);
+                propertyBlock.SetColor("_Color", color);
+                renderer.SetPropertyBlock(propertyBlock);
+            }
+
+            return visual;
+        }
         private static GameObject EnsureVisualCube(string name, Transform parent, Vector3 localPosition, Vector3 localScale, Color color)
         {
             var existing = parent.Find(name);
