@@ -12,5 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ed78f02d5934f3f952a4f6ad2eb52a5, type: 3}
   m_Name: ConfigurationProvider
   m_EditorClassIdentifier: 
-  _gameplayConfigs: []
+  _gameplayConfigs:
+  - {fileID: 11400000, guid: 2324cab684614143baa28ebb563b1d10, type: 2}
   _gameplayAssets: []

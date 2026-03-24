@@ -1,3 +1,4 @@
+using VacuumSorter.Bootstrap;
 using VacuumSorter.GameCamera;
 using UnityEngine;
 
@@ -42,11 +43,18 @@ namespace VacuumSorter.GameScene
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void EnsureRuntimeArena()
         {
-            var existing = Object.FindObjectOfType<ArenaSliceBootstrap>();
+            var services = ServiceLocator.Current;
+            var host = services != null ? services.gameObject : null;
+
+            if (host == null)
+            {
+                host = new GameObject("ArenaSliceRuntimeBootstrap");
+            }
+
+            var existing = host.GetComponent<ArenaSliceBootstrap>();
             if (existing == null)
             {
-                var bootstrapObject = new GameObject("ArenaSliceRuntimeBootstrap");
-                existing = bootstrapObject.AddComponent<ArenaSliceBootstrap>();
+                existing = host.AddComponent<ArenaSliceBootstrap>();
             }
 
             existing.RebuildArena();
@@ -75,7 +83,12 @@ namespace VacuumSorter.GameScene
             arenaRoot.localRotation = Quaternion.identity;
             arenaRoot.localScale = Vector3.one;
 
-            var floor = EnsurePrimitive(arenaRoot, ArenaFloorName, PrimitiveType.Cube, new Vector3(0f, -_floorThickness * 0.5f, 0f), new Vector3(_arenaWidth, _floorThickness, _arenaDepth));
+            var floor = EnsurePrimitive(
+                arenaRoot,
+                ArenaFloorName,
+                PrimitiveType.Cube,
+                new Vector3(0f, -_floorThickness * 0.5f, 0f),
+                new Vector3(_arenaWidth, _floorThickness, _arenaDepth));
             SetColor(floor, _floorColor);
 
             var bounds = EnsureChild(arenaRoot, ArenaBoundsName, Vector3.zero, Vector3.one);
@@ -88,6 +101,7 @@ namespace VacuumSorter.GameScene
             var centerScale = new Vector3(_centerZoneDiameter, 0.02f, _centerZoneDiameter);
             var centerZone = EnsurePrimitive(arenaRoot, CenterSpawnZoneName, PrimitiveType.Cylinder, new Vector3(0f, 0.02f, 0f), centerScale);
             SetColor(centerZone, _centerColor);
+            MakeMarkerNonBlocking(centerZone);
 
             var sortAnchorRoot = EnsureChild(arenaRoot, SortAnchorRootName, Vector3.zero, Vector3.one);
             for (var i = 0; i < _anchorCount; i++)
@@ -111,6 +125,25 @@ namespace VacuumSorter.GameScene
         {
             var marker = EnsurePrimitive(parent, anchorName + "_Marker", PrimitiveType.Cylinder, localPosition, new Vector3(0.9f, 0.02f, 0.9f));
             SetColor(marker, _anchorColor);
+            MakeMarkerNonBlocking(marker);
+        }
+
+        private static void MakeMarkerNonBlocking(GameObject marker)
+        {
+            var collider = marker.GetComponent<Collider>();
+            if (collider == null)
+            {
+                return;
+            }
+
+            if (Application.isPlaying)
+            {
+                Destroy(collider);
+            }
+            else
+            {
+                DestroyImmediate(collider);
+            }
         }
 
         private void CleanupExtraAnchors(Transform sortAnchorRoot)
@@ -124,8 +157,7 @@ namespace VacuumSorter.GameScene
                 }
 
                 var suffix = child.name.Substring("SortAnchor_".Length);
-                int index;
-                if (!int.TryParse(suffix, out index) || index <= _anchorCount)
+                if (!int.TryParse(suffix, out var index) || index <= _anchorCount)
                 {
                     continue;
                 }
