@@ -11,6 +11,7 @@ namespace VacuumSorter.Scoring
 
         public int TotalRequired { get; private set; }
         public int TotalSorted { get; private set; }
+        public int RemainingRequired => TotalRequired - TotalSorted;
         public int Score => TotalSorted;
         public bool IsComplete => TotalRequired > 0 && TotalSorted >= TotalRequired;
 

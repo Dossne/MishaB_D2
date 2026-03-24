@@ -1,9 +1,11 @@
+using System;
 using System.Collections.Generic;
 using VacuumSorter.Bootstrap;
 using VacuumSorter.Items;
-using VacuumSorter.MainUI;
+using VacuumSorter.LevelFlow;
 using VacuumSorter.Scoring;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace VacuumSorter.SortTargets
 {
@@ -16,18 +18,25 @@ namespace VacuumSorter.SortTargets
 
         private bool _isInitialized;
         private ScoreService _scoreService;
-        private MainUiProvider _mainUiProvider;
+        private LevelCompletionService _completionService;
+
+        public static SortTargetSliceBootstrap Current { get; private set; }
+
+        public bool IsInitialized => _isInitialized;
+        public LevelCompletionService CompletionService => _completionService;
+
+        public event Action Initialized;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void EnsureRuntimeBootstrap()
         {
-            var services = ServiceLocator.Current;
-            GameObject host = services != null ? services.gameObject : null;
-
+            var host = GameObject.Find(RuntimeRootName);
             if (host == null)
             {
                 host = new GameObject(RuntimeRootName);
             }
+
+            DontDestroyOnLoad(host);
 
             var bootstrap = host.GetComponent<SortTargetSliceBootstrap>();
             if (bootstrap == null)
@@ -38,9 +47,69 @@ namespace VacuumSorter.SortTargets
             bootstrap.InitializeIfReady();
         }
 
+        private void Awake()
+        {
+            if (Current != null && Current != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            Current = this;
+            DontDestroyOnLoad(gameObject);
+        }
+
+        private void OnEnable()
+        {
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
         private void Start()
         {
             InitializeIfReady();
+        }
+
+        private void Update()
+        {
+            if (_isInitialized && (_targetsRoot == null || _targetsRoot.childCount == 0))
+            {
+                ResetForSceneLoad();
+            }
+
+            InitializeIfReady();
+        }
+
+        private void OnDisable()
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+
+        private void OnDestroy()
+        {
+            if (Current == this)
+            {
+                Current = null;
+            }
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            ResetForSceneLoad();
+            InitializeIfReady();
+        }
+
+        private void ResetForSceneLoad()
+        {
+            _isInitialized = false;
+            _scoreService = null;
+            _completionService = null;
+
+            if (_targetsRoot != null)
+            {
+                var rootToDestroy = _targetsRoot.gameObject;
+                _targetsRoot = null;
+                Destroy(rootToDestroy);
+            }
         }
 
         private void InitializeIfReady()
@@ -70,14 +139,15 @@ namespace VacuumSorter.SortTargets
                 return;
             }
 
-            _mainUiProvider = services.MainUiProvider;
             _scoreService = new ScoreService(validTargets);
+            _completionService = new LevelCompletionService(_scoreService);
 
             EnsureTargetsRoot();
             SpawnTargets(validTargets, sortTargetConfig);
-            UpdateHud();
 
             _isInitialized = true;
+            Initialized?.Invoke();
+
             Debug.Log("Stage5 bootstrap: sorting targets initialized.");
         }
 
@@ -185,37 +255,7 @@ namespace VacuumSorter.SortTargets
 
         private void OnItemAccepted(ItemTypeConfig acceptedType)
         {
-            if (_scoreService == null || !_scoreService.TryRegisterSorted(acceptedType))
-            {
-                return;
-            }
-
-            UpdateHud();
-        }
-
-        private void UpdateHud()
-        {
-            if (_mainUiProvider == null || _scoreService == null)
-            {
-                return;
-            }
-
-            if (_mainUiProvider.ScoreLabel != null)
-            {
-                _mainUiProvider.ScoreLabel.text = $"Sorted: {_scoreService.TotalSorted}/{_scoreService.TotalRequired}";
-            }
-
-            if (_mainUiProvider.LevelLabel != null)
-            {
-                _mainUiProvider.LevelLabel.text = $"Score: {_scoreService.Score}";
-            }
-
-            if (_mainUiProvider.StateLabel != null)
-            {
-                _mainUiProvider.StateLabel.text = _scoreService.IsComplete
-                    ? "State: Sorting target reached"
-                    : "State: Push items into matching holes";
-            }
+            _completionService?.TryRegisterSorted(acceptedType);
         }
     }
 }

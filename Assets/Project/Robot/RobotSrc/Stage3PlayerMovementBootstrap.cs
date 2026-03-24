@@ -4,6 +4,7 @@ using VacuumSorter.MainUI;
 using VacuumSorter.PlayerInput;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem.UI;
@@ -27,12 +28,11 @@ namespace VacuumSorter.Robot
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void EnsureRuntimeBootstrap()
         {
-            var services = ServiceLocator.Current;
-            GameObject host = services != null ? services.gameObject : null;
-
+            var host = GameObject.Find(RuntimeRootName);
             if (host == null)
             {
                 host = new GameObject(RuntimeRootName);
+                DontDestroyOnLoad(host);
             }
 
             var bootstrap = host.GetComponent<Stage3PlayerMovementBootstrap>();
@@ -44,9 +44,40 @@ namespace VacuumSorter.Robot
             bootstrap.InitializeIfReady();
         }
 
+        private void OnEnable()
+        {
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
         private void Start()
         {
             InitializeIfReady();
+        }
+
+        private void Update()
+        {
+            InitializeIfReady();
+        }
+
+        private void OnDisable()
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            ResetForSceneLoad();
+            InitializeIfReady();
+        }
+
+        private void ResetForSceneLoad()
+        {
+            _isInitialized = false;
+            _eventSystem = null;
+            _inputReader = null;
+            _joystickView = null;
+            _robotController = null;
+            _scoopEjectButton = null;
         }
 
         private void InitializeIfReady()

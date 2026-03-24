@@ -2,6 +2,7 @@ using System.Collections;
 using VacuumSorter.Bootstrap;
 using VacuumSorter.Items;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace VacuumSorter.LevelFlow
 {
@@ -18,12 +19,11 @@ namespace VacuumSorter.LevelFlow
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void EnsureRuntimeBootstrap()
         {
-            var services = ServiceLocator.Current;
-            GameObject host = services != null ? services.gameObject : null;
-
+            var host = GameObject.Find(RuntimeRootName);
             if (host == null)
             {
                 host = new GameObject(RuntimeRootName);
+                DontDestroyOnLoad(host);
             }
 
             var bootstrap = host.GetComponent<LevelBootstrap>();
@@ -35,17 +35,42 @@ namespace VacuumSorter.LevelFlow
             bootstrap.InitializeIfReady();
         }
 
+        private void OnEnable()
+        {
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
         private void Start()
+        {
+            InitializeIfReady();
+        }
+
+        private void Update()
         {
             InitializeIfReady();
         }
 
         private void OnDisable()
         {
-            if (_spawnRoutine != null)
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+            StopSpawnRoutine();
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            ResetForSceneLoad();
+            InitializeIfReady();
+        }
+
+        private void ResetForSceneLoad()
+        {
+            _isInitialized = false;
+            StopSpawnRoutine();
+
+            if (_itemsRoot != null)
             {
-                StopCoroutine(_spawnRoutine);
-                _spawnRoutine = null;
+                Destroy(_itemsRoot.gameObject);
+                _itemsRoot = null;
             }
         }
 
@@ -76,13 +101,9 @@ namespace VacuumSorter.LevelFlow
             }
 
             EnsureItemsRoot();
-
-            if (_spawnRoutine != null)
-            {
-                StopCoroutine(_spawnRoutine);
-            }
-
+            StopSpawnRoutine();
             _spawnRoutine = StartCoroutine(SpawnItems(levelSpawnConfig));
+
             _isInitialized = true;
             Debug.Log("Stage4 bootstrap: falling pile spawn initialized.");
         }
@@ -152,6 +173,17 @@ namespace VacuumSorter.LevelFlow
 
             var itemView = itemObject.AddComponent<ItemView>();
             itemView.Initialize(itemType);
+        }
+
+        private void StopSpawnRoutine()
+        {
+            if (_spawnRoutine == null)
+            {
+                return;
+            }
+
+            StopCoroutine(_spawnRoutine);
+            _spawnRoutine = null;
         }
     }
 }
