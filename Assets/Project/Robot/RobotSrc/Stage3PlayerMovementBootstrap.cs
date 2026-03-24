@@ -2,6 +2,7 @@ using TMPro;
 using VacuumSorter.Bootstrap;
 using VacuumSorter.MainUI;
 using VacuumSorter.PlayerInput;
+using VacuumSorter.Progression;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
@@ -24,6 +25,7 @@ namespace VacuumSorter.Robot
         [SerializeField] private Button _scoopEjectButton;
 
         private bool _isInitialized;
+        private float _appliedScoopMultiplier = -1f;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void EnsureRuntimeBootstrap()
@@ -56,6 +58,12 @@ namespace VacuumSorter.Robot
 
         private void Update()
         {
+            if (_isInitialized)
+            {
+                TryApplyScoopUpgrade();
+                return;
+            }
+
             InitializeIfReady();
         }
 
@@ -78,6 +86,7 @@ namespace VacuumSorter.Robot
             _joystickView = null;
             _robotController = null;
             _scoopEjectButton = null;
+            _appliedScoopMultiplier = -1f;
         }
 
         private void InitializeIfReady()
@@ -125,6 +134,7 @@ namespace VacuumSorter.Robot
 
             _robotController.Initialize(_inputReader, robotConfig);
             EnsureScoopEjectButton(mainUiProvider);
+            TryApplyScoopUpgrade();
 
             _isInitialized = true;
 
@@ -246,6 +256,24 @@ namespace VacuumSorter.Robot
 
             _scoopEjectButton.onClick.RemoveAllListeners();
             _scoopEjectButton.onClick.AddListener(_robotController.EjectItemsFromScoop);
+        }
+
+        private void TryApplyScoopUpgrade()
+        {
+            if (_robotController == null)
+            {
+                return;
+            }
+
+            var upgradeService = ProgressionRuntimeBootstrap.UpgradeService;
+            var targetMultiplier = upgradeService != null ? upgradeService.CurrentScoopMultiplier : 1f;
+            if (Mathf.Abs(targetMultiplier - _appliedScoopMultiplier) < 0.001f)
+            {
+                return;
+            }
+
+            _robotController.SetScoopSizeMultiplier(targetMultiplier);
+            _appliedScoopMultiplier = targetMultiplier;
         }
     }
 }

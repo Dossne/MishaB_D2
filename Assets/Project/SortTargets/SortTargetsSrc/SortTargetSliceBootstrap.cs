@@ -237,7 +237,7 @@ namespace VacuumSorter.SortTargets
             for (var i = 0; i < rootTransform.childCount; i++)
             {
                 var child = rootTransform.GetChild(i);
-                if (!child.name.StartsWith("SortAnchor_", System.StringComparison.Ordinal) || child.name.EndsWith("_Marker", System.StringComparison.Ordinal))
+                if (!child.name.StartsWith("SortAnchor_", StringComparison.Ordinal) || child.name.EndsWith("_Marker", StringComparison.Ordinal))
                 {
                     continue;
                 }

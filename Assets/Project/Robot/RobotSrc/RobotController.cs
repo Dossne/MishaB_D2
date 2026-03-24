@@ -27,6 +27,7 @@ namespace VacuumSorter.Robot
         private Vector3 _lastObstacleNormal;
         private bool _scoopWallCollisionConfigured;
         private float _nextScoopWallCollisionRetryTime;
+        private float _scoopSizeMultiplier = 1f;
 
         public void Initialize(PlayerInputReader inputReader, RobotConfig config)
         {
@@ -38,10 +39,18 @@ namespace VacuumSorter.Robot
             _isInitialized = _inputReader != null && _config != null;
         }
 
+        public void SetScoopSizeMultiplier(float multiplier)
+        {
+            _scoopSizeMultiplier = Mathf.Max(1f, multiplier);
+            EnsureRobotVisuals();
+            _scoopWallCollisionConfigured = false;
+            TryConfigureScoopWallCollisionIgnores(true);
+        }
+
         public void EjectItemsFromScoop()
         {
-            var center = transform.TransformPoint(new Vector3(0f, 0.22f, 0.84f));
-            var halfExtents = new Vector3(0.34f, 0.24f, 0.52f);
+            var center = transform.TransformPoint(GetScoopEjectProbeLocalCenter());
+            var halfExtents = GetScoopEjectProbeHalfExtents();
             var overlapCount = Physics.OverlapBoxNonAlloc(
                 center,
                 halfExtents,
@@ -191,9 +200,9 @@ namespace VacuumSorter.Robot
             _rigidbody.linearDamping = 4.5f;
             _rigidbody.angularDamping = 20f;
             _rigidbody.interpolation = RigidbodyInterpolation.Interpolate;
-            _rigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-            _rigidbody.solverIterations = 12;
-            _rigidbody.solverVelocityIterations = 12;
+            _rigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+            _rigidbody.solverIterations = 16;
+            _rigidbody.solverVelocityIterations = 16;
             _rigidbody.constraints = RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
 
             var bodyCollider = GetComponent<CapsuleCollider>();
@@ -212,19 +221,28 @@ namespace VacuumSorter.Robot
         {
             var body = EnsureVisualPrimitive("RobotBody", PrimitiveType.Cylinder, transform, new Vector3(0f, 0.24f, -0.05f), new Vector3(1.3f, 0.22f, 1.45f), new Color(0.72f, 0.79f, 0.86f, 1f));
             var top = EnsureVisualCube("RobotTop", transform, new Vector3(0f, 0.5f, -0.08f), new Vector3(0.8f, 0.18f, 0.8f), new Color(0.18f, 0.22f, 0.27f, 1f));
-            EnsureVisualCube("ScoopLeft", transform, new Vector3(-0.58f, 0.22f, 0.8f), new Vector3(0.22f, 0.3f, 1.35f), new Color(0.97f, 0.78f, 0.32f, 1f));
-            EnsureVisualCube("ScoopRight", transform, new Vector3(0.58f, 0.22f, 0.8f), new Vector3(0.22f, 0.3f, 1.35f), new Color(0.97f, 0.78f, 0.32f, 1f));
+
+            var scoopXOffset = 1.16f * _scoopSizeMultiplier;
+            var scoopDepth = 0.675f;
+            var scoopThickness = 0.34f * Mathf.Lerp(1f, 1.1f, Mathf.Clamp01(_scoopSizeMultiplier - 1f));
+            var scoopHeight = 0.6f;
+            var scoopBackWidth = Mathf.Max(0.2f, scoopXOffset * 2f - scoopThickness * 0.9f);
+            var scoopBackDepth = 0.2f;
+            var scoopBackZ = 0.5625f;
+
+            EnsureVisualCube("ScoopLeft", transform, new Vector3(-scoopXOffset, 0.22f, 0.8f), new Vector3(scoopThickness, scoopHeight, scoopDepth), new Color(0.97f, 0.78f, 0.32f, 1f));
+            EnsureVisualCube("ScoopRight", transform, new Vector3(scoopXOffset, 0.22f, 0.8f), new Vector3(scoopThickness, scoopHeight, scoopDepth), new Color(0.97f, 0.78f, 0.32f, 1f));
+            EnsureVisualCube("ScoopBack", transform, new Vector3(0f, 0.22f, scoopBackZ), new Vector3(scoopBackWidth, scoopHeight, scoopBackDepth), new Color(0.97f, 0.78f, 0.32f, 1f));
 
             body.transform.SetSiblingIndex(0);
             top.transform.SetSiblingIndex(1);
 
-            RemoveChildIfExists("ScoopBack");
             RemoveChildIfExists("ScoopLip");
-            RemoveChildIfExists("ScoopColliderBack");
             RemoveChildIfExists("ScoopColliderLip");
 
-            EnsureScoopCollider("ScoopColliderLeft", new Vector3(-0.58f, 0.22f, 0.8f), new Vector3(0.22f, 0.3f, 1.35f));
-            EnsureScoopCollider("ScoopColliderRight", new Vector3(0.58f, 0.22f, 0.8f), new Vector3(0.22f, 0.3f, 1.35f));
+            EnsureScoopCollider("ScoopColliderLeft", new Vector3(-scoopXOffset, 0.22f, 0.8f), new Vector3(scoopThickness, scoopHeight, scoopDepth));
+            EnsureScoopCollider("ScoopColliderRight", new Vector3(scoopXOffset, 0.22f, 0.8f), new Vector3(scoopThickness, scoopHeight, scoopDepth));
+            EnsureScoopCollider("ScoopColliderBack", new Vector3(0f, 0.22f, scoopBackZ), new Vector3(scoopBackWidth, scoopHeight, scoopBackDepth));
         }
 
         private static GameObject EnsureVisualPrimitive(
@@ -270,6 +288,7 @@ namespace VacuumSorter.Robot
 
             return visual;
         }
+
         private static GameObject EnsureVisualCube(string name, Transform parent, Vector3 localPosition, Vector3 localScale, Color color)
         {
             var existing = parent.Find(name);
@@ -343,11 +362,13 @@ namespace VacuumSorter.Robot
 
             collider.size = size;
         }
+
         private void CacheScoopColliders()
         {
             _scoopColliders.Clear();
             AddScoopCollider("ScoopColliderLeft");
             AddScoopCollider("ScoopColliderRight");
+            AddScoopCollider("ScoopColliderBack");
         }
 
         private void AddScoopCollider(string name)
@@ -435,10 +456,10 @@ namespace VacuumSorter.Robot
                 return;
             }
 
-            var scoopProbeCenter = transform.TransformPoint(new Vector3(0f, 0.25f, 0.9f));
+            var scoopProbeCenter = transform.TransformPoint(GetDenseProbeLocalCenter());
             var overlapCount = Physics.OverlapSphereNonAlloc(
                 scoopProbeCenter,
-                1.1f,
+                GetDenseProbeRadius(),
                 _denseOverlapBuffer,
                 ~0,
                 QueryTriggerInteraction.Ignore);
@@ -474,5 +495,29 @@ namespace VacuumSorter.Robot
                 planarVelocity.magnitude,
                 _denseRigidbodies.Count);
         }
+
+        private Vector3 GetScoopEjectProbeLocalCenter()
+        {
+            return new Vector3(0f, 0.22f, 0.72f);
+        }
+
+        private Vector3 GetScoopEjectProbeHalfExtents()
+        {
+            return new Vector3(
+                0.68f * _scoopSizeMultiplier,
+                0.24f,
+                0.26f);
+        }
+
+        private Vector3 GetDenseProbeLocalCenter()
+        {
+            return new Vector3(0f, 0.25f, 0.76f);
+        }
+
+        private float GetDenseProbeRadius()
+        {
+            return 1.15f + (_scoopSizeMultiplier - 1f) * 0.25f;
+        }
     }
 }
+

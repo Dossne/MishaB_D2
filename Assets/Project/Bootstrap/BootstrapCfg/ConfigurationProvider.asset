@@ -19,4 +19,5 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 6454a466f8594fcb8cf214b26fc8f34b, type: 2}
   - {fileID: 11400000, guid: 1360c8eacd964ea2864283e8660af226, type: 2}
   - {fileID: 11400000, guid: 4fa799bf72c2489fa81bf50955a63cdc, type: 2}
+  - {fileID: 11400000, guid: a9d07ac00c434ff0afb39645fd4235e7, type: 2}
   _gameplayAssets: []

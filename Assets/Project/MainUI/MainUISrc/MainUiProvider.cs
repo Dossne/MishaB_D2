@@ -22,6 +22,7 @@ namespace VacuumSorter.MainUI
         [SerializeField] private TextMeshProUGUI _scoreLabel;
         [SerializeField] private TextMeshProUGUI _levelLabel;
         [SerializeField] private TextMeshProUGUI _stateLabel;
+        [SerializeField] private TextMeshProUGUI _upgradeLabel;
 
         private TMP_FontAsset _runtimeGeneratedFontAsset;
 
@@ -32,6 +33,7 @@ namespace VacuumSorter.MainUI
         public TextMeshProUGUI ScoreLabel => _scoreLabel;
         public TextMeshProUGUI LevelLabel => _levelLabel;
         public TextMeshProUGUI StateLabel => _stateLabel;
+        public TextMeshProUGUI UpgradeLabel => _upgradeLabel;
 
         private void Awake()
         {
@@ -90,6 +92,7 @@ namespace VacuumSorter.MainUI
             _scoreLabel = EnsureHudLabel(_scoreLabel, "ScoreLabel", "Score: 0", new Vector2(32f, -32f));
             _levelLabel = EnsureHudLabel(_levelLabel, "LevelLabel", "Level: 1", new Vector2(32f, -92f));
             _stateLabel = EnsureHudLabel(_stateLabel, "StateLabel", "State: Ready", new Vector2(32f, -152f));
+            _upgradeLabel = EnsureHudLabel(_upgradeLabel, "UpgradeLabel", "Scoop: Lv0 x1.00", new Vector2(32f, -212f));
         }
 
         private RectTransform EnsureRoot(RectTransform currentRoot, string rootName)
@@ -155,6 +158,7 @@ namespace VacuumSorter.MainUI
             _scoreLabel.font = stageFontAsset;
             _levelLabel.font = stageFontAsset;
             _stateLabel.font = stageFontAsset;
+            _upgradeLabel.font = stageFontAsset;
         }
 
         private static void StretchToFull(RectTransform rectTransform)

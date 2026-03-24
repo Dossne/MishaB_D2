@@ -1,6 +1,7 @@
 using VacuumSorter.Bootstrap;
 using VacuumSorter.MainUI;
 using VacuumSorter.Meta;
+using VacuumSorter.Progression;
 using VacuumSorter.SortTargets;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -193,6 +194,7 @@ namespace VacuumSorter.LevelFlow
             UnbindCompletionService();
 
             _completionService = completionService;
+            _completionService.SortedRegistered += OnSortedRegistered;
             _completionService.ProgressChanged += OnProgressChanged;
             _completionService.Completed += OnCompleted;
             _isCompletionBound = true;
@@ -208,6 +210,7 @@ namespace VacuumSorter.LevelFlow
                 return;
             }
 
+            _completionService.SortedRegistered -= OnSortedRegistered;
             _completionService.ProgressChanged -= OnProgressChanged;
             _completionService.Completed -= OnCompleted;
             _isCompletionBound = false;
@@ -223,6 +226,17 @@ namespace VacuumSorter.LevelFlow
             _sortTargetSliceBootstrap.Initialized -= OnSortTargetsInitialized;
         }
 
+        private void OnSortedRegistered(int scoreDelta)
+        {
+            var upgradeService = ProgressionRuntimeBootstrap.UpgradeService;
+            if (upgradeService == null || scoreDelta <= 0)
+            {
+                return;
+            }
+
+            upgradeService.AddCollectedScore(scoreDelta);
+        }
+
         private void OnProgressChanged()
         {
             RefreshHud();
@@ -235,8 +249,13 @@ namespace VacuumSorter.LevelFlow
 
             if (_restartButtonPresenter != null)
             {
+                var upgradeService = ProgressionRuntimeBootstrap.UpgradeService;
+                var scoopLevel = upgradeService != null ? upgradeService.CurrentScoopLevel : 0;
+                var scoopMultiplier = upgradeService != null ? upgradeService.CurrentScoopMultiplier : 1f;
                 _restartButtonPresenter.ShowCompletion(
                     LevelRuntimeState.CurrentLevelNumber,
+                    scoopLevel,
+                    scoopMultiplier,
                     RestartCurrentLevel,
                     GoToNextLevel);
             }
@@ -264,6 +283,16 @@ namespace VacuumSorter.LevelFlow
                 _mainUiProvider.StateLabel.text = _completionService.IsCompleted
                     ? "Remaining: 0 (Complete)"
                     : $"Remaining: {_completionService.RemainingRequired}";
+            }
+
+            var upgradeService = ProgressionRuntimeBootstrap.UpgradeService;
+            if (_mainUiProvider.UpgradeLabel != null && upgradeService != null)
+            {
+                _mainUiProvider.UpgradeLabel.text = $"Scoop: Lv{upgradeService.CurrentScoopLevel} x{upgradeService.CurrentScoopMultiplier:0.00} (Total {upgradeService.TotalCollectedScore})";
+            }
+            else if (_mainUiProvider.UpgradeLabel != null)
+            {
+                _mainUiProvider.UpgradeLabel.text = "Scoop: Lv0 x1.00 (Total 0)";
             }
         }
 

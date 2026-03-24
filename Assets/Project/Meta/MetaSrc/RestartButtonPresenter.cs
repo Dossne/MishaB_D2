@@ -28,7 +28,7 @@ namespace VacuumSorter.Meta
             EnsureView();
         }
 
-        public void ShowCompletion(int levelNumber, Action onRestart, Action onNext)
+        public void ShowCompletion(int levelNumber, int scoopLevel, float scoopMultiplier, Action onRestart, Action onNext)
         {
             EnsureView();
             if (_popupRoot == null)
@@ -45,7 +45,7 @@ namespace VacuumSorter.Meta
 
             if (_bodyLabel != null)
             {
-                _bodyLabel.text = $"Level {levelNumber} cleared.\nNext level is a placeholder reload.";
+                _bodyLabel.text = $"Level {levelNumber} cleared.\nCurrent scoop: Lv{scoopLevel} (x{scoopMultiplier:0.00}).";
             }
 
             if (_restartButton != null)

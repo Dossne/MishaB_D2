@@ -10,6 +10,7 @@ namespace VacuumSorter.LevelFlow
 
         public event Action ProgressChanged;
         public event Action Completed;
+        public event Action<int> SortedRegistered;
 
         public bool IsCompleted { get; private set; }
         public int Score => _scoreService != null ? _scoreService.Score : 0;
@@ -34,6 +35,7 @@ namespace VacuumSorter.LevelFlow
                 return false;
             }
 
+            SortedRegistered?.Invoke(1);
             ProgressChanged?.Invoke();
 
             if (_scoreService.IsComplete)
