@@ -15,8 +15,6 @@ namespace VacuumSorter.LevelFlow
     {
         private const string RuntimeRootName = "Stage6LevelStateRuntime";
 
-        private static int s_currentLevelNumber = 1;
-
         [SerializeField] private RestartButtonPresenter _restartButtonPresenter;
 
         private MainUiProvider _mainUiProvider;
@@ -80,7 +78,7 @@ namespace VacuumSorter.LevelFlow
 
             if (IsNextPressed())
             {
-                GoToNextLevelPlaceholder();
+                GoToNextLevel();
             }
         }
 
@@ -238,9 +236,9 @@ namespace VacuumSorter.LevelFlow
             if (_restartButtonPresenter != null)
             {
                 _restartButtonPresenter.ShowCompletion(
-                    s_currentLevelNumber,
+                    LevelRuntimeState.CurrentLevelNumber,
                     RestartCurrentLevel,
-                    GoToNextLevelPlaceholder);
+                    GoToNextLevel);
             }
         }
 
@@ -258,7 +256,7 @@ namespace VacuumSorter.LevelFlow
 
             if (_mainUiProvider.LevelLabel != null)
             {
-                _mainUiProvider.LevelLabel.text = $"Level: {s_currentLevelNumber}";
+                _mainUiProvider.LevelLabel.text = $"Level: {LevelRuntimeState.CurrentLevelNumber}";
             }
 
             if (_mainUiProvider.StateLabel != null)
@@ -291,20 +289,29 @@ namespace VacuumSorter.LevelFlow
 
         private static void RestartCurrentLevel()
         {
-            var activeScene = SceneManager.GetActiveScene();
-            if (!string.IsNullOrEmpty(activeScene.path))
-            {
-                SceneManager.LoadScene(activeScene.path);
-                return;
-            }
-
-            SceneManager.LoadScene(activeScene.name);
+            LevelRuntimeState.RestartCurrentLevel();
+            ReloadActiveScene();
         }
 
-        private static void GoToNextLevelPlaceholder()
+        private static void GoToNextLevel()
         {
-            s_currentLevelNumber++;
+            var services = ServiceLocator.Current;
+            var levelCount = 1;
+            if (services != null && services.ConfigurationProvider != null)
+            {
+                LevelCatalogConfig levelCatalog;
+                if (services.ConfigurationProvider.TryGetConfig(out levelCatalog) && levelCatalog != null)
+                {
+                    levelCount = Mathf.Max(1, levelCatalog.LevelCount);
+                }
+            }
 
+            LevelRuntimeState.AdvanceToNextLevel(levelCount);
+            ReloadActiveScene();
+        }
+
+        private static void ReloadActiveScene()
+        {
             var activeScene = SceneManager.GetActiveScene();
             if (!string.IsNullOrEmpty(activeScene.path))
             {

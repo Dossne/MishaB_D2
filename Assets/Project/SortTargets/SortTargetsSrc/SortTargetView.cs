@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using VacuumSorter.Items;
+using VacuumSorter.LevelFlow;
 using UnityEngine;
 
 namespace VacuumSorter.SortTargets
@@ -25,16 +26,19 @@ namespace VacuumSorter.SortTargets
 
         public void Initialize(
             ItemTypeConfig acceptedType,
-            SortTargetConfig config,
+            LevelConfig.TargetInteractionSettings interactionSettings,
             Action<ItemTypeConfig> onAccepted)
         {
             _acceptedType = acceptedType;
-            _pullDuration = config.PullDuration;
-            _sinkDepth = config.SinkDepth;
-            _wrongRejectImpulse = config.WrongItemRejectImpulse;
+            _pullDuration = interactionSettings != null ? interactionSettings.PullDuration : 0.24f;
+            _sinkDepth = interactionSettings != null ? interactionSettings.SinkDepth : 0.55f;
+            _wrongRejectImpulse = interactionSettings != null ? interactionSettings.WrongItemRejectImpulse : 1.6f;
             _onAccepted = onAccepted;
 
-            ConfigureTrigger(config.AcceptRadius, config.AcceptHeight);
+            var acceptRadius = interactionSettings != null ? interactionSettings.AcceptRadius : 0.85f;
+            var acceptHeight = interactionSettings != null ? interactionSettings.AcceptHeight : 0.8f;
+
+            ConfigureTrigger(acceptRadius, acceptHeight);
             EnsureVisuals();
         }
 

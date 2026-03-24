@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _gameplayConfigs:
   - {fileID: 11400000, guid: 2324cab684614143baa28ebb563b1d10, type: 2}
-  - {fileID: 11400000, guid: 11710adf8da44c92bd145f9515de2ec0, type: 2}
+  - {fileID: 11400000, guid: b102d52895f74c7ead7fa6b55aa69cf7, type: 2}
   - {fileID: 11400000, guid: ca81b2368b2146a1808d48dbca90c20f, type: 2}
   - {fileID: 11400000, guid: 6454a466f8594fcb8cf214b26fc8f34b, type: 2}
-  - {fileID: 11400000, guid: e869343eb6db4bf0bc6d6f7600922d33, type: 2}
+  - {fileID: 11400000, guid: 1360c8eacd964ea2864283e8660af226, type: 2}
   _gameplayAssets: []

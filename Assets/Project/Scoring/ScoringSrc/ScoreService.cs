@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using VacuumSorter.Items;
-using VacuumSorter.SortTargets;
+using VacuumSorter.LevelFlow;
 
 namespace VacuumSorter.Scoring
 {
@@ -15,7 +15,7 @@ namespace VacuumSorter.Scoring
         public int Score => TotalSorted;
         public bool IsComplete => TotalRequired > 0 && TotalSorted >= TotalRequired;
 
-        public ScoreService(IReadOnlyList<SortTargetConfig.TargetDefinition> targetDefinitions)
+        public ScoreService(IReadOnlyList<LevelConfig.TargetDefinition> targetDefinitions)
         {
             if (targetDefinitions == null)
             {

@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cbb1142c62124f26957e89326411d796, type: 3}
+  m_Name: Level_10
+  m_EditorClassIdentifier: 
+  _levelNumber: 10
+  _itemBatches:
+  - _itemType: {fileID: 11400000, guid: ca81b2368b2146a1808d48dbca90c20f, type: 2}
+    _count: 26
+  - _itemType: {fileID: 11400000, guid: 6454a466f8594fcb8cf214b26fc8f34b, type: 2}
+    _count: 24
+  - _itemType: {fileID: 11400000, guid: 1360c8eacd964ea2864283e8660af226, type: 2}
+    _count: 22
+  _spawn:
+    _spawnRadius: 1.3
+    _spawnHeight: 6.6
+    _heightStep: 0.24
+    _spawnInterval: 0.024
+  _targets:
+  - _itemType: {fileID: 11400000, guid: ca81b2368b2146a1808d48dbca90c20f, type: 2}
+    _requiredCount: 13
+    _anchorIndex: 0
+  - _itemType: {fileID: 11400000, guid: 6454a466f8594fcb8cf214b26fc8f34b, type: 2}
+    _requiredCount: 13
+    _anchorIndex: 2
+  - _itemType: {fileID: 11400000, guid: 1360c8eacd964ea2864283e8660af226, type: 2}
+    _requiredCount: 13
+    _anchorIndex: 4
+  _targetInteraction:
+    _acceptRadius: 0.85
+    _acceptHeight: 0.8
+    _pullDuration: 0.24
+    _sinkDepth: 0.55
+    _wrongItemRejectImpulse: 1.6
+  _arenaLayout:
+    _arenaWidth: 19
+    _arenaDepth: 18.5
+    _centerZoneDiameter: 4.5
+    _anchorRadius: 6.4
+    _anchorCount: 6

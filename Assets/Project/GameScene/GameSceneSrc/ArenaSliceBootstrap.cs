@@ -1,5 +1,6 @@
 using VacuumSorter.Bootstrap;
 using VacuumSorter.GameCamera;
+using VacuumSorter.LevelFlow;
 using UnityEngine;
 
 namespace VacuumSorter.GameScene
@@ -73,9 +74,44 @@ namespace VacuumSorter.GameScene
 
         public void RebuildArena()
         {
+            TryApplyActiveLevelLayout();
+
             var arenaRoot = FindOrCreateChild(transform, ArenaRootName);
             EnsureArena(arenaRoot);
             EnsureFixedCamera();
+        }
+
+        private void TryApplyActiveLevelLayout()
+        {
+            if (!Application.isPlaying)
+            {
+                return;
+            }
+
+            var services = ServiceLocator.Current;
+            if (services == null || services.ConfigurationProvider == null)
+            {
+                return;
+            }
+
+            LevelCatalogConfig levelCatalog;
+            if (!services.ConfigurationProvider.TryGetConfig(out levelCatalog) || levelCatalog == null)
+            {
+                return;
+            }
+
+            LevelConfig activeLevel;
+            if (!levelCatalog.TryGetLevelByIndex(LevelRuntimeState.CurrentLevelIndex, out activeLevel) || activeLevel == null || activeLevel.ArenaLayout == null)
+            {
+                return;
+            }
+
+            var layout = activeLevel.ArenaLayout;
+            _arenaWidth = layout.ArenaWidth;
+            _arenaDepth = layout.ArenaDepth;
+            _centerZoneDiameter = layout.CenterZoneDiameter;
+            _anchorRadius = layout.AnchorRadius;
+            _anchorCount = Mathf.Max(2, layout.AnchorCount);
         }
 
         private void EnsureArena(Transform arenaRoot)

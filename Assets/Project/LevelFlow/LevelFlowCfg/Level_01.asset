@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cbb1142c62124f26957e89326411d796, type: 3}
+  m_Name: Level_01
+  m_EditorClassIdentifier: 
+  _levelNumber: 1
+  _itemBatches:
+  - _itemType: {fileID: 11400000, guid: ca81b2368b2146a1808d48dbca90c20f, type: 2}
+    _count: 14
+  - _itemType: {fileID: 11400000, guid: 6454a466f8594fcb8cf214b26fc8f34b, type: 2}
+    _count: 12
+  _spawn:
+    _spawnRadius: 0.9
+    _spawnHeight: 6
+    _heightStep: 0.2
+    _spawnInterval: 0.03
+  _targets:
+  - _itemType: {fileID: 11400000, guid: ca81b2368b2146a1808d48dbca90c20f, type: 2}
+    _requiredCount: 8
+    _anchorIndex: 0
+  - _itemType: {fileID: 11400000, guid: 6454a466f8594fcb8cf214b26fc8f34b, type: 2}
+    _requiredCount: 8
+    _anchorIndex: 3
+  _targetInteraction:
+    _acceptRadius: 0.85
+    _acceptHeight: 0.8
+    _pullDuration: 0.24
+    _sinkDepth: 0.55
+    _wrongItemRejectImpulse: 1.6
+  _arenaLayout:
+    _arenaWidth: 15
+    _arenaDepth: 15
+    _centerZoneDiameter: 3.8
+    _anchorRadius: 4.8
+    _anchorCount: 4

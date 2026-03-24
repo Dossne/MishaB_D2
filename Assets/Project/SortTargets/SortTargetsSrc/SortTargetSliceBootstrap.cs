@@ -125,17 +125,24 @@ namespace VacuumSorter.SortTargets
                 return;
             }
 
-            SortTargetConfig sortTargetConfig;
-            if (!services.ConfigurationProvider.TryGetConfig(out sortTargetConfig) || sortTargetConfig == null)
+            LevelCatalogConfig levelCatalog;
+            if (!services.ConfigurationProvider.TryGetConfig(out levelCatalog) || levelCatalog == null)
             {
-                Debug.LogError("Stage5 bootstrap: SortTargetConfig is not assigned in ConfigurationProvider.", services.ConfigurationProvider);
+                Debug.LogError("Stage7 bootstrap: LevelCatalogConfig is not assigned in ConfigurationProvider.", services.ConfigurationProvider);
                 return;
             }
 
-            var validTargets = CollectValidTargets(sortTargetConfig);
+            LevelConfig activeLevelConfig;
+            if (!levelCatalog.TryGetLevelByIndex(LevelRuntimeState.CurrentLevelIndex, out activeLevelConfig) || activeLevelConfig == null)
+            {
+                Debug.LogError("Stage7 bootstrap: cannot resolve active LevelConfig for sort targets.", levelCatalog);
+                return;
+            }
+
+            var validTargets = CollectValidTargets(activeLevelConfig);
             if (validTargets.Count < 2)
             {
-                Debug.LogError("Stage5 bootstrap: configure at least 2 valid sort targets with item types.", sortTargetConfig);
+                Debug.LogError("Stage7 bootstrap: configure at least 2 valid targets with item types in LevelConfig.", activeLevelConfig);
                 return;
             }
 
@@ -143,25 +150,25 @@ namespace VacuumSorter.SortTargets
             _completionService = new LevelCompletionService(_scoreService);
 
             EnsureTargetsRoot();
-            SpawnTargets(validTargets, sortTargetConfig);
+            SpawnTargets(validTargets, activeLevelConfig.TargetInteraction);
 
             _isInitialized = true;
             Initialized?.Invoke();
 
-            Debug.Log("Stage5 bootstrap: sorting targets initialized.");
+            Debug.Log("Stage7 bootstrap: content-driven sorting targets initialized.");
         }
 
-        private List<SortTargetConfig.TargetDefinition> CollectValidTargets(SortTargetConfig config)
+        private List<LevelConfig.TargetDefinition> CollectValidTargets(LevelConfig levelConfig)
         {
-            var result = new List<SortTargetConfig.TargetDefinition>();
-            if (config.Targets == null)
+            var result = new List<LevelConfig.TargetDefinition>();
+            if (levelConfig == null || levelConfig.Targets == null)
             {
                 return result;
             }
 
-            for (var i = 0; i < config.Targets.Count; i++)
+            for (var i = 0; i < levelConfig.Targets.Count; i++)
             {
-                var target = config.Targets[i];
+                var target = levelConfig.Targets[i];
                 if (target == null || target.ItemType == null || target.RequiredCount <= 0)
                 {
                     continue;
@@ -196,8 +203,8 @@ namespace VacuumSorter.SortTargets
         }
 
         private void SpawnTargets(
-            IReadOnlyList<SortTargetConfig.TargetDefinition> definitions,
-            SortTargetConfig config)
+            IReadOnlyList<LevelConfig.TargetDefinition> definitions,
+            LevelConfig.TargetInteractionSettings interactionSettings)
         {
             var anchorPoints = ResolveAnchorPoints();
 
@@ -212,7 +219,7 @@ namespace VacuumSorter.SortTargets
                 targetObject.transform.rotation = Quaternion.identity;
 
                 var targetView = targetObject.AddComponent<SortTargetView>();
-                targetView.Initialize(definition.ItemType, config, OnItemAccepted);
+                targetView.Initialize(definition.ItemType, interactionSettings, OnItemAccepted);
             }
         }
 

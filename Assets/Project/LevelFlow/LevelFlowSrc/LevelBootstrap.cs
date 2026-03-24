@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using VacuumSorter.Bootstrap;
 using VacuumSorter.Items;
 using UnityEngine;
@@ -12,6 +13,8 @@ namespace VacuumSorter.LevelFlow
         private const string RuntimeRootName = "Stage4LevelRuntime";
 
         [SerializeField] private Transform _itemsRoot;
+
+        private readonly List<ItemTypeConfig> _spawnPlanBuffer = new();
 
         private bool _isInitialized;
         private Coroutine _spawnRoutine;
@@ -66,6 +69,7 @@ namespace VacuumSorter.LevelFlow
         {
             _isInitialized = false;
             StopSpawnRoutine();
+            _spawnPlanBuffer.Clear();
 
             if (_itemsRoot != null)
             {
@@ -87,25 +91,58 @@ namespace VacuumSorter.LevelFlow
                 return;
             }
 
-            LevelSpawnConfig levelSpawnConfig;
-            if (!services.ConfigurationProvider.TryGetConfig(out levelSpawnConfig) || levelSpawnConfig == null)
+            LevelCatalogConfig levelCatalog;
+            if (!services.ConfigurationProvider.TryGetConfig(out levelCatalog) || levelCatalog == null)
             {
-                Debug.LogError("Stage4 bootstrap: LevelSpawnConfig is not assigned in ConfigurationProvider.", services.ConfigurationProvider);
+                Debug.LogError("Stage7 bootstrap: LevelCatalogConfig is not assigned in ConfigurationProvider.", services.ConfigurationProvider);
                 return;
             }
 
-            if (levelSpawnConfig.ItemTypes == null || levelSpawnConfig.ItemTypes.Count < 2)
+            LevelConfig activeLevelConfig;
+            if (!levelCatalog.TryGetLevelByIndex(LevelRuntimeState.CurrentLevelIndex, out activeLevelConfig) || activeLevelConfig == null)
             {
-                Debug.LogError("Stage4 bootstrap: configure at least 2 item types in LevelSpawnConfig.", levelSpawnConfig);
+                Debug.LogError("Stage7 bootstrap: cannot resolve active LevelConfig for current level index.", levelCatalog);
+                return;
+            }
+
+            var totalItems = BuildSpawnPlan(activeLevelConfig, _spawnPlanBuffer);
+            if (totalItems <= 0)
+            {
+                Debug.LogError("Stage7 bootstrap: active LevelConfig has no valid item batches.", activeLevelConfig);
                 return;
             }
 
             EnsureItemsRoot();
             StopSpawnRoutine();
-            _spawnRoutine = StartCoroutine(SpawnItems(levelSpawnConfig));
+            _spawnRoutine = StartCoroutine(SpawnItems(activeLevelConfig.Spawn, _spawnPlanBuffer));
 
             _isInitialized = true;
-            Debug.Log("Stage4 bootstrap: falling pile spawn initialized.");
+            Debug.Log("Stage7 bootstrap: content-driven level item spawn initialized.");
+        }
+
+        private static int BuildSpawnPlan(LevelConfig levelConfig, List<ItemTypeConfig> output)
+        {
+            output.Clear();
+            if (levelConfig == null || levelConfig.ItemBatches == null)
+            {
+                return 0;
+            }
+
+            for (var i = 0; i < levelConfig.ItemBatches.Count; i++)
+            {
+                var batch = levelConfig.ItemBatches[i];
+                if (batch == null || batch.ItemType == null || batch.Count <= 0)
+                {
+                    continue;
+                }
+
+                for (var c = 0; c < batch.Count; c++)
+                {
+                    output.Add(batch.ItemType);
+                }
+            }
+
+            return output.Count;
         }
 
         private void EnsureItemsRoot()
@@ -130,34 +167,39 @@ namespace VacuumSorter.LevelFlow
             _itemsRoot.localScale = Vector3.one;
         }
 
-        private IEnumerator SpawnItems(LevelSpawnConfig config)
+        private IEnumerator SpawnItems(LevelConfig.SpawnSettings spawnSettings, IReadOnlyList<ItemTypeConfig> spawnPlan)
         {
-            var itemTypes = config.ItemTypes;
-            for (var i = 0; i < config.TotalItemCount; i++)
+            if (spawnSettings == null || spawnPlan == null)
             {
-                var itemType = itemTypes[i % itemTypes.Count];
+                _spawnRoutine = null;
+                yield break;
+            }
+
+            for (var i = 0; i < spawnPlan.Count; i++)
+            {
+                var itemType = spawnPlan[i];
                 if (itemType == null)
                 {
                     continue;
                 }
 
-                var position = BuildSpawnPosition(config, i);
+                var position = BuildSpawnPosition(spawnSettings, i);
                 SpawnSingleItem(itemType, position);
 
-                if (config.SpawnInterval > 0f)
+                if (spawnSettings.SpawnInterval > 0f)
                 {
-                    yield return new WaitForSeconds(config.SpawnInterval);
+                    yield return new WaitForSeconds(spawnSettings.SpawnInterval);
                 }
             }
 
             _spawnRoutine = null;
         }
 
-        private Vector3 BuildSpawnPosition(LevelSpawnConfig config, int index)
+        private static Vector3 BuildSpawnPosition(LevelConfig.SpawnSettings spawnSettings, int index)
         {
-            var random2D = Random.insideUnitCircle * config.SpawnRadius;
+            var random2D = Random.insideUnitCircle * spawnSettings.SpawnRadius;
             var layer = index / 8;
-            var y = config.SpawnHeight + layer * config.HeightStep;
+            var y = spawnSettings.SpawnHeight + layer * spawnSettings.HeightStep;
             return new Vector3(random2D.x, y, random2D.y);
         }
 
