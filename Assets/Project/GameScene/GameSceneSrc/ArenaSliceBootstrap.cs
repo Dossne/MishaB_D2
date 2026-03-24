@@ -37,6 +37,7 @@ namespace VacuumSorter.GameScene
 
         private static readonly int BaseColorPropertyId = Shader.PropertyToID("_BaseColor");
         private static readonly int ColorPropertyId = Shader.PropertyToID("_Color");
+        private static PhysicsMaterial s_lowFrictionFloorMaterial;
 
         private MaterialPropertyBlock _propertyBlock;
 
@@ -90,6 +91,7 @@ namespace VacuumSorter.GameScene
                 new Vector3(0f, -_floorThickness * 0.5f, 0f),
                 new Vector3(_arenaWidth, _floorThickness, _arenaDepth));
             SetColor(floor, _floorColor);
+            ApplyLowFrictionFloorMaterial(floor);
 
             var bounds = EnsureChild(arenaRoot, ArenaBoundsName, Vector3.zero, Vector3.one);
             var walls = EnsureChild(bounds, ArenaWallsName, Vector3.zero, Vector3.one);
@@ -261,6 +263,29 @@ namespace VacuumSorter.GameScene
             _propertyBlock.SetColor(BaseColorPropertyId, color);
             _propertyBlock.SetColor(ColorPropertyId, color);
             renderer.SetPropertyBlock(_propertyBlock);
+        }
+
+        private static void ApplyLowFrictionFloorMaterial(GameObject floorObject)
+        {
+            var floorCollider = floorObject.GetComponent<Collider>();
+            if (floorCollider == null)
+            {
+                return;
+            }
+
+            if (s_lowFrictionFloorMaterial == null)
+            {
+                s_lowFrictionFloorMaterial = new PhysicsMaterial("FloorLowFriction")
+                {
+                    dynamicFriction = 0.02f,
+                    staticFriction = 0.02f,
+                    frictionCombine = PhysicsMaterialCombine.Minimum,
+                    bounciness = 0f,
+                    bounceCombine = PhysicsMaterialCombine.Minimum
+                };
+            }
+
+            floorCollider.sharedMaterial = s_lowFrictionFloorMaterial;
         }
     }
 }

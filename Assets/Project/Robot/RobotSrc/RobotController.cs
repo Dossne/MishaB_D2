@@ -16,11 +16,14 @@ namespace VacuumSorter.Robot
         private readonly ContactPoint[] _contactBuffer = new ContactPoint[8];
         private readonly Collider[] _ejectOverlapBuffer = new Collider[48];
         private readonly HashSet<Rigidbody> _ejectRigidbodies = new();
+        private readonly List<Collider> _scoopColliders = new();
 
         private Rigidbody _rigidbody;
         private bool _isInitialized;
         private bool _isTouchingSideObstacle;
         private Vector3 _lastObstacleNormal;
+        private bool _scoopWallCollisionConfigured;
+        private float _nextScoopWallCollisionRetryTime;
 
         public void Initialize(PlayerInputReader inputReader, RobotConfig config)
         {
@@ -28,6 +31,7 @@ namespace VacuumSorter.Robot
             _config = config;
             SetupPhysics();
             EnsureRobotVisuals();
+            TryConfigureScoopWallCollisionIgnores(true);
             _isInitialized = _inputReader != null && _config != null;
         }
 
@@ -73,10 +77,16 @@ namespace VacuumSorter.Robot
         {
             SetupPhysics();
             EnsureRobotVisuals();
+            TryConfigureScoopWallCollisionIgnores(true);
         }
 
         private void FixedUpdate()
         {
+            if (!_scoopWallCollisionConfigured && Time.time >= _nextScoopWallCollisionRetryTime)
+            {
+                TryConfigureScoopWallCollisionIgnores();
+            }
+
             if (!_isInitialized || _inputReader == null || _config == null)
             {
                 return;
@@ -286,5 +296,84 @@ namespace VacuumSorter.Robot
 
             collider.size = size;
         }
+        private void CacheScoopColliders()
+        {
+            _scoopColliders.Clear();
+            AddScoopCollider("ScoopColliderLeft");
+            AddScoopCollider("ScoopColliderRight");
+        }
+
+        private void AddScoopCollider(string name)
+        {
+            var child = transform.Find(name);
+            if (child == null)
+            {
+                return;
+            }
+
+            var collider = child.GetComponent<Collider>();
+            if (collider != null)
+            {
+                _scoopColliders.Add(collider);
+            }
+        }
+
+        private void TryConfigureScoopWallCollisionIgnores(bool forceRetry = false)
+        {
+            if (_scoopWallCollisionConfigured && !forceRetry)
+            {
+                return;
+            }
+
+            CacheScoopColliders();
+            if (_scoopColliders.Count == 0)
+            {
+                ScheduleScoopWallCollisionRetry();
+                return;
+            }
+
+            var wallsRoot = GameObject.Find("ArenaWalls");
+            if (wallsRoot == null)
+            {
+                ScheduleScoopWallCollisionRetry();
+                return;
+            }
+
+            var wallColliders = wallsRoot.GetComponentsInChildren<Collider>();
+            if (wallColliders == null || wallColliders.Length == 0)
+            {
+                ScheduleScoopWallCollisionRetry();
+                return;
+            }
+
+            for (var i = 0; i < _scoopColliders.Count; i++)
+            {
+                var scoopCollider = _scoopColliders[i];
+                if (scoopCollider == null)
+                {
+                    continue;
+                }
+
+                for (var j = 0; j < wallColliders.Length; j++)
+                {
+                    var wallCollider = wallColliders[j];
+                    if (wallCollider == null)
+                    {
+                        continue;
+                    }
+
+                    Physics.IgnoreCollision(scoopCollider, wallCollider, true);
+                }
+            }
+
+            _scoopWallCollisionConfigured = true;
+        }
+
+        private void ScheduleScoopWallCollisionRetry()
+        {
+            _scoopWallCollisionConfigured = false;
+            _nextScoopWallCollisionRetryTime = Time.time + 0.5f;
+        }
+
     }
 }
