@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: RobotConfig
   m_EditorClassIdentifier: 
   _robotPrefab: {fileID: 100100000, guid: 6adabe606b634c929f92a4ab5a600082, type: 3}
-  _startPosition: {x: 0, y: 0.35, z: -4}
-  _maxSpeed: 7.5
+  _startPosition: {x: 0, y: 0.3, z: -4}
+  _maxSpeed: 7.2
   _acceleration: 18
-  _deceleration: 28
-  _turnSpeed: 540
+  _deceleration: 26
+  _turnSpeed: 460
   _inputExponent: 1.35
   _arenaHalfWidth: 8
   _arenaHalfDepth: 8

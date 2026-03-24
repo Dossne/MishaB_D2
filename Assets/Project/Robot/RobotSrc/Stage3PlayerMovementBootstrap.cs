@@ -1,8 +1,10 @@
+using TMPro;
 using VacuumSorter.Bootstrap;
 using VacuumSorter.MainUI;
 using VacuumSorter.PlayerInput;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem.UI;
 #endif
@@ -18,6 +20,7 @@ namespace VacuumSorter.Robot
         [SerializeField] private PlayerInputReader _inputReader;
         [SerializeField] private JoystickView _joystickView;
         [SerializeField] private RobotController _robotController;
+        [SerializeField] private Button _scoopEjectButton;
 
         private bool _isInitialized;
 
@@ -90,6 +93,8 @@ namespace VacuumSorter.Robot
             }
 
             _robotController.Initialize(_inputReader, robotConfig);
+            EnsureScoopEjectButton(mainUiProvider);
+
             _isInitialized = true;
 
             Debug.Log("Stage3 bootstrap: player input and robot movement initialized.");
@@ -168,6 +173,48 @@ namespace VacuumSorter.Robot
             {
                 _robotController = robotObject.AddComponent<RobotController>();
             }
+        }
+
+        private void EnsureScoopEjectButton(MainUiProvider mainUiProvider)
+        {
+            if (_scoopEjectButton == null)
+            {
+                var buttonObject = new GameObject("ScoopEjectButton", typeof(RectTransform), typeof(Image), typeof(Button));
+                var buttonRect = buttonObject.GetComponent<RectTransform>();
+                buttonRect.SetParent(mainUiProvider.HudParent, false);
+                buttonRect.anchorMin = new Vector2(1f, 0f);
+                buttonRect.anchorMax = new Vector2(1f, 0f);
+                buttonRect.pivot = new Vector2(1f, 0f);
+                buttonRect.anchoredPosition = new Vector2(-42f, 42f);
+                buttonRect.sizeDelta = new Vector2(280f, 120f);
+
+                var buttonImage = buttonObject.GetComponent<Image>();
+                buttonImage.color = new Color(0.17f, 0.24f, 0.33f, 0.93f);
+
+                _scoopEjectButton = buttonObject.GetComponent<Button>();
+                _scoopEjectButton.targetGraphic = buttonImage;
+
+                var labelObject = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
+                var labelRect = labelObject.GetComponent<RectTransform>();
+                labelRect.SetParent(buttonRect, false);
+                labelRect.anchorMin = Vector2.zero;
+                labelRect.anchorMax = Vector2.one;
+                labelRect.offsetMin = Vector2.zero;
+                labelRect.offsetMax = Vector2.zero;
+
+                var label = labelObject.GetComponent<TextMeshProUGUI>();
+                label.text = "EJECT";
+                label.alignment = TextAlignmentOptions.Center;
+                label.fontSize = 48f;
+                label.color = Color.white;
+                if (mainUiProvider.ScoreLabel != null)
+                {
+                    label.font = mainUiProvider.ScoreLabel.font;
+                }
+            }
+
+            _scoopEjectButton.onClick.RemoveAllListeners();
+            _scoopEjectButton.onClick.AddListener(_robotController.EjectItemsFromScoop);
         }
     }
 }
