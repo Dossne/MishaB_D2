@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+using UnityEngine;
+using VacuumSorter.MainUI;
 
 namespace VacuumSorter.Bootstrap
 {
@@ -6,12 +7,16 @@ namespace VacuumSorter.Bootstrap
     public sealed class ServiceLocator : MonoBehaviour
     {
         [SerializeField] private ConfigurationProvider _configurationProvider;
+        [SerializeField] private MainUiProvider _mainUiProvider;
 
         public static ServiceLocator Current { get; private set; }
 
         public GameManager GameManager { get; private set; }
         public ConfigurationProvider ConfigurationProvider { get; private set; }
+        public MainUiProvider MainUiProvider { get; private set; }
+
         public ConfigurationProvider SerializedConfigurationProvider => _configurationProvider;
+        public MainUiProvider SerializedMainUiProvider => _mainUiProvider;
 
         private void Awake()
         {
@@ -41,6 +46,12 @@ namespace VacuumSorter.Bootstrap
         {
             ConfigurationProvider = configurationProvider;
             Debug.Log("ServiceLocator: registered ConfigurationProvider (step 2).");
+        }
+
+        public void RegisterMainUiProvider(MainUiProvider mainUiProvider)
+        {
+            MainUiProvider = mainUiProvider;
+            Debug.Log("ServiceLocator: registered MainUiProvider (step 3).");
         }
     }
 }

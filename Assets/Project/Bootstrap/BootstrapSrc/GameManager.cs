@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace VacuumSorter.Bootstrap
@@ -80,6 +80,15 @@ namespace VacuumSorter.Bootstrap
             }
 
             _serviceLocator.RegisterConfigurationProvider(configurationProvider);
+
+            var mainUiProvider = _serviceLocator.SerializedMainUiProvider;
+            if (mainUiProvider == null)
+            {
+                Debug.LogError("GameManager: MainUiProvider reference is missing in ServiceLocator.", _serviceLocator);
+                return;
+            }
+
+            _serviceLocator.RegisterMainUiProvider(mainUiProvider);
 
             for (var i = 0; i < _runtimeSystems.Count; i++)
             {
