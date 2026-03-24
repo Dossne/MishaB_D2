@@ -1,9 +1,8 @@
-# AGENTS.md
+﻿# AGENTS.md
 
 ## Project intent
 
-This repository contains a Unity 2D prototype for **TetrisTactic**
-a tactic turn-based 2d game.
+This repository contains a Unity 3D prototype for **VacuumSorter** mobile casual game collecting and sorting objects
 
 Primary goal:
 - quickly explore and validate the core gameplay loop 
@@ -13,30 +12,30 @@ Secondary goals:
 - avoid unnecessary complexity
 - preserve project stability inside Unity
 
-## Implementation source of truth
+## Source Of Truth
 
 Full project specification is stored in:
-- `Docs/TetrisTactic_TechSpec.md`
+- `Docs/VacuumSorter_TechSpec.md`
 
-Codex must treat this file as the main implementation specification for the project.
+Codex must treat this file as the implementation source of truth.
 
-If there is a conflict between an ad-hoc implementation choice and the specification,
-prefer the specification unless the user explicitly overrides it.
+If there is a conflict between an ad-hoc implementation choice and the specification, prefer the specification unless the user explicitly overrides it.
 
-## Execution workflow for Codex
+## Mandatory Workflow
 
 - Implement strictly one stage at a time.
 - Never continue to the next stage automatically.
-- Stop at the end of every completed stage.
+- Stop immediately after completing the current stage.
+- Transition to the next stage only after an explicit user command.
 - After each stage, report:
   - what was implemented;
   - which files, prefabs, ScriptableObjects, scenes, or folders were added or changed;
   - what gameplay loop or interaction loop is currently available to the player;
   - what was not verified if Unity/editor execution was not available.
-- At the end of each stage, explicitly ask the user to:
+- After each stage, explicitly ask the user to:
   - test the current stage in Unity or a build;
   - report bugs or UX issues;
-  - confirm when to continue to the next stage.
+  - confirm when to continue.
 - If bugs are reported for the current stage, fix them before moving to the next stage.
 - Do not treat a stage as complete if the vertical slice for that stage is not runnable.
 - Keep changes scoped to the active stage unless a small supporting fix is required for stability.
@@ -51,22 +50,32 @@ When making changes, optimize for:
 
 Do not over-engineer early systems unless explicitly requested.
 
-## Important directories
+## Project Structure
 
-- `Assets/Project/` — gameplay code, scenes, prefabs, art, ScriptableObjects
-- `Packages/` — Unity package configuration
-- `ProjectSettings/` — engine/project settings
+- All implementation lives under `Assets/Project/`.
+- Use feature-based folders: one feature = one folder.
+- Feature folder names must match the feature name.
+- Organize feature contents by asset type:
+  - `FeatureNameSrc` for scripts
+  - `FeatureNamePfs` for prefabs
+  - `FeatureNameArt` for sprites, animations, animator controllers
+  - `FeatureNameCfg` for ScriptableObject assets
+- ScriptableObject class definitions belong in `FeatureNameSrc`, not in `FeatureNameCfg`.
 
-## Working rules
+## UI Text Rules
 
-- Prefer minimal, targeted changes.
+- Use `TextMeshPro` for in-game text, HUD text, popup text, floating text, and other player-facing text.
+- Do not use legacy Unity UI text components unless the user explicitly asks for an exception.
+- If the project contains `Assets/Font/bangerscyrillic.otf`, use the corresponding `TextMeshPro` font asset based on `bangerscyrillic` instead of the default Unity font for visible game UI text, unless the user explicitly asks for another font.
+## Constraints
+
+- Keep diffs small and readable.
+- Preserve Unity asset references and `.meta` files.
 - Do not rename or move files unless necessary.
-- Preserve `.meta` files and Unity asset references.
 - Do not edit `ProjectSettings/` unless the task requires it.
 - Do not add new Unity packages without clear reason.
 - Do not commit generated or cache folders such as `Library/`, `Temp/`, `Logs/`, `UserSettings/`.
-- If a change is risky for scenes, prefabs, or references, explicitly mention that risk.
-
+- Do not claim runtime/editor verification that was not actually performed.
 ## Code style
 
 - Prefer clear and boring code over clever abstractions.
@@ -98,3 +107,4 @@ A task is done when:
 - the diff is reasonably small
 - no obviously unrelated files were changed
 - any limitations or unverified assumptions are stated clearly
+
