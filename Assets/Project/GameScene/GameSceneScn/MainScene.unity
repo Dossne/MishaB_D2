@@ -130,6 +130,7 @@ GameObject:
   - component: {fileID: 100100101}
   - component: {fileID: 100100102}
   - component: {fileID: 100100103}
+  - component: {fileID: 100100104}
   m_Layer: 0
   m_Name: BootstrapRoot
   m_TagString: Untagged
@@ -179,6 +180,30 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _serviceLocator: {fileID: 100100102}
+--- !u!114 &100100104
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100100100}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd56b7a3419c0e824bf31ea9756cc4de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _arenaWidth: 16
+  _arenaDepth: 16
+  _floorThickness: 0.4
+  _wallHeight: 1.6
+  _wallThickness: 0.6
+  _centerZoneDiameter: 4
+  _anchorRadius: 5.2
+  _anchorCount: 6
+  _floorColor: {r: 0.23, g: 0.28, b: 0.33, a: 1}
+  _wallColor: {r: 0.13, g: 0.16, b: 0.2, a: 1}
+  _centerColor: {r: 0.88, g: 0.74, b: 0.24, a: 1}
+  _anchorColor: {r: 0.2, g: 0.67, b: 0.69, a: 1}
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -191,6 +216,7 @@ GameObject:
   - component: {fileID: 330585545}
   - component: {fileID: 330585544}
   - component: {fileID: 330585547}
+  - component: {fileID: 330585548}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -316,6 +342,27 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!114 &330585548
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 330585543}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 37d19652ba4e80fc9b42d18e6f3a7c11, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _lookAtWorldPosition: {x: 0, y: 0, z: 0}
+  _pitchDegrees: 85
+  _yawDegrees: 0
+  _cameraDistance: 20
+  _arenaHalfWidth: 8
+  _arenaHalfDepth: 8
+  _padding: 1.5
+  _minimumOrthoSize: 8.5
+  _minimumAspect: 0.5625
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -557,6 +604,7 @@ SceneRoots:
   - {fileID: 832575519}
   - {fileID: 100100101}
   - {fileID: 200100102}
+
 
 
 
